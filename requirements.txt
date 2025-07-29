@@ -1,1 +1,10 @@
 streamlit
+numpy
+opencv-python-headless
+mediapipe
+keras
+scikit-image
+tensorflow
+pandas
+keras
+imageio
