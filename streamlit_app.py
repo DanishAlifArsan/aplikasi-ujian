@@ -3,8 +3,14 @@ from secrets import choice
 import streamlit as st
 
 import os
+import cv2
 import numpy as np
 from PIL import Image
+import sys
+sys.path.append('code/')
+import controller
+
+FRAME_WINDOW = st.image([])
 
 # Initialize a flag in session state
 if 'form_submitted' not in st.session_state:
@@ -14,13 +20,45 @@ if 'input_name' not in st.session_state:
     st.session_state.input_name = ""
 
 if st.session_state.form_submitted:
-    st.write("You logged in")
-    st.write(f"Hello {st.session_state.input_name}")
     if st.button("Log Out"):
         st.session_state.input_name = ""
         st.session_state.form_submitted = False
         st.success("Logged out!")
         st.rerun()
+    
+    cap = cv2.VideoCapture(0)
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        face_image = controller.load_and_align_videos(ret, frame, cap)
+        identity = ""
+
+        list_embs = {}
+        data = controller.get_data()
+        for name, db_embs in data.items():
+            dist = controller.calc_dist(embs, db_embs)
+            list_embs[name] = dist
+
+        name = min(list_embs, key=list_embs.get)
+        identity = name
+
+        if name == st.session_state.input_name:
+            true_data += 1
+        else:
+            false_data += 1
+
+        cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+        cv2.putText(frame, identity, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(frame, f"True :{true_data}", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(frame, f"False :{false_data}", (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        cv2.putText(frame, f"{list_embs[st.session_state.input_name]:.4f}", (500, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+        
+        FRAME_WINDOW.image(frame)
+        cv2.waitKey(1)
+    
 
 else:
     st.subheader("Register")
