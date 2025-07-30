@@ -12,7 +12,7 @@ import sys
 sys.path.append('../code/')
 import inception_resnet_v1 as Inception
 
-mediapipe_path = '../model/mediapipe/blaze_face_short_range.tflite'
+mediapipe_path = '/workspaces/aplikasi-ujian/model/mediapipe/blaze_face_short_range.tflite'
 model_path = '/workspaces/aplikasi-ujian/model/facenet_2/model/skenario_2/facenet_keras.keras'
 model = load_model(model_path, compile=False, custom_objects={'Custom>scaling': Inception.scaling, 'l2_norm': Inception.l2_norm})
 
@@ -42,7 +42,7 @@ def load_and_align_images(image, margin):
                       x-margin//2:x+w+margin//2, :]
             aligned_images = resize(cropped, (160, 160), mode='reflect')
             
-            return aligned_images, x, y, w, h
+            return aligned_images
 
 def load_and_align_videos(red,frame,cap):
     BaseOptions = mp.tasks.BaseOptions
@@ -76,7 +76,7 @@ def load_and_align_videos(red,frame,cap):
             if face_image is not None and face_image.size > 0:
                 face_image = resize(face_image, (160, 160), mode='reflect')
     
-    return face_image
+            return face_image, x, y, w, h
 
 def get_embedding(face):
     sample = np.expand_dims(face, axis=0)

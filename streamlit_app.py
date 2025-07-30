@@ -10,8 +10,6 @@ import sys
 sys.path.append('code')
 import controller
 
-FRAME_WINDOW = st.image([])
-
 # Initialize a flag in session state
 if 'form_submitted' not in st.session_state:
     st.session_state.form_submitted = False
@@ -26,40 +24,47 @@ if st.session_state.form_submitted:
         st.success("Logged out!")
         st.rerun()
     
-    cap = cv2.VideoCapture(0)
+    run = st.checkbox('Start Camera')
+    FRAME_WINDOW = st.image([])
 
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
+    if run:
+        cap = cv2.VideoCapture(0)
+        if not cap.isOpened():
+            st.error("Camera not available")
+        else:
+            while run:
+                ret, frame = cap.read()
+                if not ret:
+                    break
 
-        face_image, x, y, w, h = controller.load_and_align_videos(ret, frame, cap)
-        if face_image is not None:
-            embs = controller.get_embedding(face_image)
-            identity = ""
+                face_image, x, y, w, h = controller.load_and_align_videos(ret, frame, cap)
+                if face_image is not None:
+                    embs = controller.get_embedding(face_image)
+                    identity = ""
 
-            list_embs = {}
-            data = controller.get_data()
-            for name, db_embs in data.items():
-                dist = controller.calc_dist(embs, db_embs)
-                list_embs[name] = dist
+                    list_embs = {}
+                    data = controller.get_data()
+                    
+                    for name, db_embs in data.items():
+                        dist = controller.calc_dist(embs, db_embs)
+                        list_embs[name] = dist
 
-            name = min(list_embs, key=list_embs.get)
-            identity = st.session_state.input_name
+                        name = min(list_embs, key=list_embs.get)
+                        identity = st.session_state.input_name
 
-            if name == st.session_state.input_name:
-                true_data += 1
-            else:
-                false_data += 1
+                    if name == st.session_state.input_name:
+                        true_data += 1
+                    else:
+                        false_data += 1
 
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-            cv2.putText(frame, identity, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            cv2.putText(frame, f"True :{true_data}", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            cv2.putText(frame, f"False :{false_data}", (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-            cv2.putText(frame, f"{list_embs[st.session_state.input_name]:.4f}", (500, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+                    cv2.putText(frame, identity, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.putText(frame, f"True :{true_data}", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.putText(frame, f"False :{false_data}", (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                    cv2.putText(frame, f"{list_embs[st.session_state.input_name]:.4f}", (500, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         
-        FRAME_WINDOW.image(frame)
-        cv2.waitKey(1)
+                FRAME_WINDOW.image(frame)
+            cap.release()
     
 else:
     st.subheader("Register")
