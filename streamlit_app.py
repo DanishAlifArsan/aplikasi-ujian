@@ -2,7 +2,9 @@ import streamlit.components.v1 as components
 from secrets import choice
 import streamlit as st
 
-import cv2
+import os
+import numpy as np
+from PIL import Image
 
 # Initialize a flag in session state
 if 'form_submitted' not in st.session_state:
@@ -23,23 +25,23 @@ if st.session_state.form_submitted:
 else:
     st.subheader("Register")
     with st.form("my_data_entry_form"):
-        input_name = st.text_input("Input Name:")
-        enable = st.checkbox("Enable camera")
-        picture = st.camera_input("Take a picture", disabled=not enable)
 
-        if picture:
-            st.image(picture)
-        
+        def load_image(image_file):
+            img = Image.open(image_file)
+            return img
+    
+        input_name = st.text_input("Name")
+        image_file = st.file_uploader("Upload Photo",type=['png','jpeg','jpg'])
         submitted = st.form_submit_button("Register")
 
         if submitted:
-            if input_name is not None and picture is not None:
-                # Process data here
-                bytes_data = picture.getvalue()
-                cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-                output_filename = f"{input_name}.png"
-                full_output_path = os.path.join('database', output_filename)
-                cv2.imwrite(full_output_path, cv2_img)
+            if input_name is not None and image_file is not None:
+                file_details = {"FileName":input_name,"FileType":image_file.type}
+                st.write(file_details)
+                img = load_image(image_file)
+                with open(os.path.join("database",image_file.name),"wb") as f: 
+                    f.write(image_file.getbuffer())         
+                    st.success("Saved File")
         
                 st.session_state.form_submitted = True
                 st.session_state.input_name = input_name
