@@ -13,7 +13,7 @@ sys.path.append('../code/')
 import inception_resnet_v1 as Inception
 
 mediapipe_path = '../model/mediapipe/blaze_face_short_range.tflite'
-model_path = '../model/facenet_2/model/skenario_2/facenet_keras.keras'
+model_path = '/workspaces/aplikasi-ujian/model/facenet_2/model/skenario_2/facenet_keras.keras'
 model = load_model(model_path, compile=False, custom_objects={'Custom>scaling': Inception.scaling, 'l2_norm': Inception.l2_norm})
 
 def load_and_align_images(image, margin):
@@ -42,7 +42,7 @@ def load_and_align_images(image, margin):
                       x-margin//2:x+w+margin//2, :]
             aligned_images = resize(cropped, (160, 160), mode='reflect')
             
-            return aligned_images
+            return aligned_images, x, y, w, h
 
 def load_and_align_videos(red,frame,cap):
     BaseOptions = mp.tasks.BaseOptions
