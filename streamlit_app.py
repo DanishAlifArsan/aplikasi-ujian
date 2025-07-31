@@ -6,9 +6,9 @@ import os
 import cv2
 import numpy as np
 from PIL import Image
-import sys
-sys.path.append('code')
-import controller
+# import sys
+# sys.path.append('code')
+# import controller
 
 # Initialize a flag in session state
 if 'form_submitted' not in st.session_state:
@@ -37,31 +37,31 @@ if st.session_state.form_submitted:
                 if not ret:
                     break
 
-                face_image, x, y, w, h = controller.load_and_align_videos(ret, frame, cap)
-                if face_image is not None:
-                    embs = controller.get_embedding(face_image)
-                    identity = ""
+            #     face_image, x, y, w, h = controller.load_and_align_videos(ret, frame, cap)
+            #     if face_image is not None:
+            #         embs = controller.get_embedding(face_image)
+            #         identity = ""
 
-                    list_embs = {}
-                    data = controller.get_data()
+            #         list_embs = {}
+            #         data = controller.get_data()
                     
-                    for name, db_embs in data.items():
-                        dist = controller.calc_dist(embs, db_embs)
-                        list_embs[name] = dist
+            #         for name, db_embs in data.items():
+            #             dist = controller.calc_dist(embs, db_embs)
+            #             list_embs[name] = dist
 
-                        name = min(list_embs, key=list_embs.get)
-                        identity = st.session_state.input_name
+            #             name = min(list_embs, key=list_embs.get)
+            #             identity = st.session_state.input_name
 
-                    if name == st.session_state.input_name:
-                        true_data += 1
-                    else:
-                        false_data += 1
+            #         if name == st.session_state.input_name:
+            #             true_data += 1
+            #         else:
+            #             false_data += 1
 
-                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-                    cv2.putText(frame, identity, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    cv2.putText(frame, f"True :{true_data}", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    cv2.putText(frame, f"False :{false_data}", (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-                    cv2.putText(frame, f"{list_embs[st.session_state.input_name]:.4f}", (500, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            #         cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+            #         cv2.putText(frame, identity, (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            #         cv2.putText(frame, f"True :{true_data}", (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            #         cv2.putText(frame, f"False :{false_data}", (20, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+            #         cv2.putText(frame, f"{list_embs[st.session_state.input_name]:.4f}", (500, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
         
                 FRAME_WINDOW.image(frame)
             cap.release()
@@ -75,18 +75,21 @@ else:
             return img
     
         input_name = st.text_input("Name")
-        image_file = st.file_uploader("Upload Photo",type=['png','jpeg','jpg'])
+        img_file_buffer = st.camera_input("Take a picture")            
         submitted = st.form_submit_button("Register")
 
         if submitted:
-            if input_name is not None and image_file is not None:
-                file_details = {"FileName":input_name,"FileType":image_file.type}
-                st.write(file_details)
-                img = load_image(image_file)
-                with open(os.path.join("database",image_file.name),"wb") as f: 
-                    f.write(image_file.getbuffer())         
-                    st.success("Saved File")
-        
+            if len(input_name) > 0 and img_file_buffer is not None:
+                bytes_data = img_file_buffer.getvalue()
+                cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
+                path = os.path.join("database",f"{input_name}.jpg")
+                success = cv2.imwrite(path, cv2_img)
+
+                if success:
+                    st.success(f"Image successfully saved image")
+                else:
+                    st.error("Error: Could not save the image.")
+             
                 st.session_state.form_submitted = True
                 st.session_state.input_name = input_name
                 st.success("Register success!")

@@ -12,8 +12,8 @@ import sys
 sys.path.append('../code/')
 import inception_resnet_v1 as Inception
 
-mediapipe_path = '/workspaces/aplikasi-ujian/model/mediapipe/blaze_face_short_range.tflite'
-model_path = '/workspaces/aplikasi-ujian/model/facenet_2/model/skenario_2/facenet_keras.keras'
+mediapipe_path = '../model/mediapipe/blaze_face_short_range.tflite'
+model_path = '../model/facenet_2/model/skenario_2/facenet_keras.keras'
 model = load_model(model_path, compile=False, custom_objects={'Custom>scaling': Inception.scaling, 'l2_norm': Inception.l2_norm})
 
 def load_and_align_images(image, margin):
